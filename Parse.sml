@@ -43,7 +43,7 @@ structure PlcFrontEnd = struct
     end
 
   (*Creates a parser from a lexer. *)
-  fun lexerToParser(lexer) : expr =
+  fun lexerToParser(lexer) =
     let
       val dummyEOF = PlcFELrVals.Tokens.EOF(0,0)
       val (result,lexer) = invoke lexer
