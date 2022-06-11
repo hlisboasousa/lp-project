@@ -13,7 +13,7 @@ val FALSE:  'a * 'a -> (svalue,'a) token
 val TRUE:  'a * 'a -> (svalue,'a) token
 val END:  'a * 'a -> (svalue,'a) token
 val ARROW:  'a * 'a -> (svalue,'a) token
-val FUNANON:  'a * 'a -> (svalue,'a) token
+val ANON:  'a * 'a -> (svalue,'a) token
 val RPAREN:  'a * 'a -> (svalue,'a) token
 val LPAREN:  'a * 'a -> (svalue,'a) token
 val RBRACE:  'a * 'a -> (svalue,'a) token

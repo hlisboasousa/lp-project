@@ -34,17 +34,44 @@ fun init() = ()
 digit=[0-9];
 ws = [\ \t];
 %%
-\n       => (pos := (!pos) + 1; Tokens.EOF(!pos, !pos));
-";"       => (Tokens.SEMICOLON(!pos, !pos));
-{ws}+    => (lex());
-{digit}+ => (Tokens.NAT (valOf (Int.fromString yytext), !pos, !pos));
+\n          => (pos := (!pos) + 1; Tokens.EOF(!pos, !pos));
+{ws}+       => (lex());
+{digit}+    => (Tokens.NAT (valOf (Int.fromString yytext), !pos, !pos));
 
-"+"      => (Tokens.PLUS(!pos,!pos));
-"*"       => (Tokens.TIMES(!pos,!pos));
-
-"-"      => (Tokens.MINUS(!pos,!pos));
-"/"      => (Tokens.DIV(!pos,!pos));
-"("      => (Tokens.LPAREN(!pos,!pos));
-")"      => (Tokens.RPAREN(!pos,!pos));
-
-"print" => (Tokens.PRINT(!pos, !pos));
+"+"         => (Tokens.PLUS(!pos,!pos));
+"*"         => (Tokens.TIMES(!pos,!pos));
+";"         => (Tokens.SEMICOLON(!pos, !pos));
+"-"         => (Tokens.MINUS(!pos,!pos));
+"/"         => (Tokens.DIV(!pos,!pos));
+"("         => (Tokens.LPAREN(!pos,!pos));
+")"         => (Tokens.RPAREN(!pos,!pos));
+"!"         => (Tokens.EXCLAMATION(!pos,!pos));
+"hd"        => (Tokens.HEAD(!pos,!pos));
+"tl"        => (Tokens.TAIL(!pos,!pos));
+"ise"       => (Tokens.ISEMPTY(!pos,!pos));
+"print"     => (Tokens.PRINT(!pos,!pos));
+"AND"       => (Tokens.AND(!pos,!pos));
+"OR"        => (Tokens.OR(!pos,!pos));
+"NOT"       => (Tokens.NOT(!pos,!pos));
+"="         => (Tokens.EQ(!pos,!pos));
+"!="        => (Tokens.NE(!pos,!pos));
+"<"         => (Tokens.LT(!pos,!pos));
+"<="        => (Tokens.LE(!pos,!pos));
+"["         => (Tokens.LBRACKET(!pos,!pos));
+"]"         => (Tokens.RBRACKET(!pos,!pos));
+"{"         => (Tokens.LBRACE(!pos,!pos));
+"}"         => (Tokens.RBRACE(!pos,!pos));
+"::"        => (Tokens.TWOCOLON(!pos,!pos));
+"if"        => (Tokens.IF(!pos,!pos));
+"else"      => (Tokens.ELSE(!pos,!pos));
+"then"      => (Tokens.THEN(!pos,!pos));
+"match"     => (Tokens.MATCH(!pos,!pos));
+"var"       => (Tokens.VAR(!pos,!pos));
+"fun"       => (Tokens.FUN(!pos,!pos));
+"fun rec"   => (Tokens.FUNREC(!pos,!pos));
+"fn"        => (Tokens.ANON(!pos, !pos));
+"=>"        => (Tokens.ARROW(!pos,!pos));
+"print"     => (Tokens.PRINT(!pos, !pos));
+"end"       => (Tokens.END(!pos, !pos));
+"false"     => (Tokens.FALSE(!pos, !pos));
+"true"      => (Tokens.TRUE(!pos, !pos));

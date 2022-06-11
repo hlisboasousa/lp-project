@@ -18,13 +18,13 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
 %right TWOCOLON
 %left PLUS MINUS
 %left TIMES DIV
-%nonassoc NOT HEAD TAIL ISEMPTY PRINT F EXCLAMATION
+%nonassoc NOT HEAD TAIL ISEMPTY PRINT F
 %left LBRACKET
 
 %term   VAR | FUN | FUNREC | IF | THEN | ELSE | MATCH | EXCLAMATION | MINUS
         | HEAD | TAIL | ISEMPTY | PRINT | AND | OR | NOT | PLUS | TIMES | DIV | EQ
         | NE | LT | LE | TWOCOLON | SEMICOLON | COMMA | NAT of int | LBRACKET | RBRACKET
-        | NAME of string | LBRACE | RBRACE | LPAREN | RPAREN | FUNANON | ARROW | END | TRUE
+        | NAME of string | LBRACE | RBRACE | LPAREN | RPAREN | ANON | ARROW | END | TRUE
         | FALSE | NIL | BOOL | INT | WITH | EOF | FUNT | F
 
 
@@ -51,6 +51,9 @@ Expr    :   AtomicExpr                          (AtomicExpr)
         |   TAIL Expr                           (Prim1("tl", Expr))
         |   ISEMPTY Expr                        (Prim1("ise", Expr))
         |   PRINT Expr                          (Prim1("print", Expr))
+        |   Expr NOT Expr                       (Prim1("NOT", Expr))
+        |   Expr AND Expr                       (Prim2("AND", Expr1, Expr2))
+        |   Expr OR Expr                        (Prim2("OR", Expr1, Expr2))
         |   Expr AND Expr                       (Prim2("AND", Expr1, Expr2))
         |   Expr PLUS Expr                      (Prim2("+", Expr1, Expr2))
         |   Expr MINUS Expr                     (Prim2("-", Expr1, Expr2))
@@ -66,7 +69,6 @@ Expr    :   AtomicExpr                          (AtomicExpr)
 
 AtomicExpr : Const              (Const)
         |    NAME               (Var NAME)
-        |    
 
 Const:  NAT     (ConI(NAT))
 
