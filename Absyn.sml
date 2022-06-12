@@ -39,8 +39,8 @@ fun list2string (conv, l) =
 (* Convert a plcType into a string *)
 fun type2string t =
   case t of
-      BoolT => "Bool"
-    | IntT => "Int"
+      BoolT => "BoolT"
+    | IntT => "IntT"
     | ListT [] => "Nil"
     | ListT ts => "(" ^ list2string (type2string, ts) ^ ")"
     | SeqT t1 => "[" ^ type2string t1 ^ "]"

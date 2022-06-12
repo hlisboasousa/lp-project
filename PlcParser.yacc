@@ -4,18 +4,33 @@ fun list2expr (ConI x) = "ConI " ^ Int.toString(x)
   | list2expr (Prim1(f, x)) = "Prim1(\"" ^ f ^ "\"" ^ ", " ^ list2expr(x) ^ ")"
   | list2expr (List(l)) = listString(list2expr, l)
 
+(* fun plc2string (IntT) = "IntT"
+  | plc2string (BoolT) = "BoolT"
+  | plc2string (h::t) = plc2string(h) ^ ", " ^ plc2string(t) 
+
+fun plcType2string (FunT(a, b)) = "FunT(" ^ plcType2string(a) ^ ", " ^ plcType2string(b) ^ ")"
+  | plcType2string (ListT(l)) = "ListT(" ^ plc2string(l) ^ ")"
+  | plcType2string (SeqT(a)) = "SeqT(" ^ plcType2string(a) ^ ")" *)
+
 fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
   | exp2string (ConB x) = "ConB " ^ Bool.toString(x)
-  | exp2string (Prim1(f, x)) = "Prim1(\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ")"
-  | exp2string (Prim2(f, x, y)) = "Prim2(\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ", " ^ exp2string(y) ^ ")"
-  | exp2string (Item(i, x)) = "Item(" ^ Int.toString(i) ^ ", " ^ exp2string(x) ^ ")"
-  | exp2string (If(e1, e2, e3)) = "If(" ^ exp2string(e2) ^ ", then " ^ exp2string(e2) ^ ", else " ^ exp2string(e3) ^ ")"
-  | exp2string (List(l)) = "List[" ^ listString(list2expr, l) ^ "]"
+  | exp2string (Prim1(f, x)) = "Prim1 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ")"
+  | exp2string (Prim2(f, x, y)) = "Prim2 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ", " ^ exp2string(y) ^ ")"
+  | exp2string (Item(i, x)) = "Item (" ^ Int.toString(i) ^ ", " ^ exp2string(x) ^ ")"
+  | exp2string (If(e1, e2, e3)) = "If (" ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ", " ^ exp2string(e3) ^ ")"
+  | exp2string (List(l)) = "List [" ^ listString(list2expr, l) ^ "]"
   | exp2string (Var x) = "Var \""^ x ^ "\""
-  | exp2string (Match(x, (option,exp)::t)) = "Match(" ^ exp2string(x) ^ ")"
-  | exp2string (Call(a1, a2)) = "Call(" ^ exp2string(a1) ^ ", " ^ exp2string(a2)^ ")"
+  | exp2string (Match(x, l:(expr option * expr) list)) = "Match (" ^ exp2string(x) ^ ", [" ^ matchString(list2expr, l) ^ "])"
+  | exp2string (Call(a1, a2)) = "Call (" ^ exp2string(a1) ^ ", " ^ exp2string(a2)^ ")"
+  | exp2string (Let(s, e1, e2)) = "Let (\"" ^ s ^ "\", " ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ")"
+  | exp2string (Anon(p, s, e)) = "Anon (" ^ type2string(p) ^ ", \"" ^ s ^ "\", " ^ exp2string(e) ^ ")"
 
-fun decl2string (Let(x, expr1, prog)) = "Let(\"" ^ x ^ "\", " ^ exp2string(expr1) ^ " " ^ exp2string(prog) ")"
+fun decl2string (Letrec(f, t, a, r, e1, e2)) = "Letrec (\"" ^ f ^ "\", " ^ type2string(t) ^ ", \"" ^ a ^ "\", " ^ type2string(r)
+       ^ ", \n\t" ^ exp2string(e1)
+       ^ ", \n\t" ^ exp2string(e2) ^ ")"
+  | decl2string (Let(s, e1, e2)) = "Let (\"" ^ s ^ "\", " ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ")"
+
+(* fun decl2string (Let(x, expr1, prog)) = "Let(\"" ^ x ^ "\", " ^ exp2string(expr1) ^ " " ^ exp2string(prog) ")" *)
 
        
 
@@ -39,13 +54,14 @@ fun decl2string (Let(x, expr1, prog)) = "Let(\"" ^ x ^ "\", " ^ exp2string(expr1
 
 %term   VAR | FUN | FUNREC | IF | THEN | ELSE | MATCH | EXCLAMATION | MINUS
         | HEAD | TAIL | ISEMPTY | PRINT | AND | OR | NOT | PLUS | TIMES | DIV | EQ
-        | NE | LT | LE | TWOCOLON | SEMICOLON | COMMA | NAT of int | LBRACKET | RBRACKET
+        | NE | LT | LE | TWOCOLON | SEMICOLON | COLON | COMMA | NAT of int | LBRACKET | RBRACKET
         | NAME of string | LBRACE | RBRACE | LPAREN | RPAREN | ANON | ARROW | END | TRUE of bool
         | FALSE of bool | NIL | BOOL | INT | WITH | EOF | FUNT | F | UNDERSCORE | PIPE
 
 
-%nonterm  Prog | Decl | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr | MatchExpr of (expr option * expr) list
-        | CondExpr of expr option | Args | Params | TypedVar | Type | AtomicType | Types 
+%nonterm  Prog | Decl of expr | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr | MatchExpr of (expr option * expr) list
+        | CondExpr of expr option | Args of (plcType * string) list | Params of (plcType * string) list
+        | TypedVar of (plcType * string) | Type of plcType | AtomicType of plcType | Types of plcType list 
         
 %eop EOF
 
@@ -56,7 +72,7 @@ fun decl2string (Let(x, expr1, prog)) = "Let(\"" ^ x ^ "\", " ^ exp2string(expr1
 %%
 
 Prog    :   Expr                 (print (exp2string(Expr)^"\n" ))
-        |   Decl SEMICOLON Prog  (print (decl2string(Decl, Prog)^"\n" ))
+        |   Decl                 (print (decl2string(Decl)^"\n" ))
 
 Expr    :   AtomicExpr                          (AtomicExpr)
         |   AppExpr                             (AppExpr)
@@ -89,7 +105,7 @@ AtomicExpr : Const                              (Const)
         (* |    LBRACE Prog RBRACE                 (Prog) *)
         |    LPAREN Expr RPAREN                 (Expr)
         |    LPAREN Comps RPAREN                (List([Comps]))
-        (* |    FUN Args ARROW Expr END            (makeAnon(Args, Expr)) *)
+        |    ANON Args ARROW Expr END            (makeAnon(Args, Expr))
 
 Const:     NAT     (ConI(NAT))
         |  TRUE    (ConB(TRUE))
@@ -107,30 +123,29 @@ CondExpr: Expr          (SOME Expr)
 AppExpr :   AtomicExpr AtomicExpr  (Call(AtomicExpr1, AtomicExpr2))
         |   AppExpr AtomicExpr     (Call(AppExpr, AtomicExpr))
 
-Decl    :   VAR NAME EQ Expr       (Let(NAME, Expr, Expr))
+Decl    :   VAR NAME EQ Expr SEMICOLON Expr             (Let(NAME, Expr1, Expr2))
+        |   FUN NAME Args EQ Expr SEMICOLON Expr        (Let(NAME, makeAnon(Args, Expr1), Expr2))
+        |   FUNREC NAME Args COLON Type EQ Expr SEMICOLON Expr (makeFun(NAME, Args, Type, Expr1, Expr2))
 
 
-(* Args:      LPAREN RPAREN        ()
+Args:      LPAREN RPAREN        ([])
        |   LPAREN Params RPAREN (Params)
 
-Params:    TypedVar (TypedVar)
-       |   TypedVar COMMA Params (ListT(TypedVar, Params))
+Params:    TypedVar ([TypedVar])
+       |   TypedVar COMMA Params (TypedVar::Params)
 
-TypedVar:  Type NAME ()
+TypedVar:  Type NAME ((Type, NAME))
 
 Type:     AtomicType             (AtomicType)
        |  LPAREN Types RPAREN    (ListT(Types))
        |  LBRACKET Type RBRACKET (SeqT(Type))
-       |  Type FTYPE Type        (FunT(Type1, Type2))
+       |  Type FUNT Type         (FunT(Type1, Type2))
 
-AtomicType: NIL                 ()
+AtomicType: NIL                 (ListT[])
        |    BOOL                (BoolT)
        |    INT                 (IntT)
        |    LPAREN Type RPAREN  (Type)
 
-Types:   Type COMMA Type        (ListT(Type1, Type2))
-       | Type COMMA Types       (ListT(Type, Types)) *)
-
-        (* |   Expr LBRACKET NAT RBRACKET          ()
- *)
+Types:   Type COMMA Type        ([Type1, Type2])
+       | Type COMMA Types       (Type::Types)
 

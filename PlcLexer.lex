@@ -32,10 +32,9 @@ fun init() = ()
 %header (functor PlcLexerFun(structure Tokens: PlcParser_TOKENS));
 
 digit=[0-9];
-ws = [\ \t];
+ws = [\ \t\n];
 alpha=[A-Za-z][A-Za-z0-9]*;
 %%
-\n          => (pos := (!pos) + 1; Tokens.EOF(!pos, !pos));
 {ws}+       => (lex());
 {digit}+    => (Tokens.NAT (valOf (Int.fromString yytext), !pos, !pos));
 "+"         => (Tokens.PLUS(!pos,!pos));
@@ -54,6 +53,8 @@ alpha=[A-Za-z][A-Za-z0-9]*;
 "AND"       => (Tokens.AND(!pos,!pos));
 "OR"        => (Tokens.OR(!pos,!pos));
 "NOT"       => (Tokens.NOT(!pos,!pos));
+"Int"       => (Tokens.INT(!pos,!pos));
+"Bool"       => (Tokens.BOOL(!pos,!pos));
 "="         => (Tokens.EQ(!pos,!pos));
 "!="        => (Tokens.NE(!pos,!pos));
 "<"         => (Tokens.LT(!pos,!pos));
@@ -63,6 +64,7 @@ alpha=[A-Za-z][A-Za-z0-9]*;
 "{"         => (Tokens.LBRACE(!pos,!pos));
 "}"         => (Tokens.RBRACE(!pos,!pos));
 "::"        => (Tokens.TWOCOLON(!pos,!pos));
+":"         => (Tokens.COLON(!pos,!pos));
 "if"        => (Tokens.IF(!pos,!pos));
 "else"      => (Tokens.ELSE(!pos,!pos));
 "then"      => (Tokens.THEN(!pos,!pos));
@@ -75,6 +77,7 @@ alpha=[A-Za-z][A-Za-z0-9]*;
 "=>"        => (Tokens.ARROW(!pos,!pos));
 "print"     => (Tokens.PRINT(!pos, !pos));
 "end"       => (Tokens.END(!pos, !pos));
+"Bool"      => (Tokens.BOOL(!pos, !pos));
 "false"     => (Tokens.FALSE(valOf (Bool.fromString yytext), !pos, !pos));
 "true"      => (Tokens.TRUE(valOf (Bool.fromString yytext), !pos, !pos));
 "nil"       => (Tokens.NIL(!pos, !pos));

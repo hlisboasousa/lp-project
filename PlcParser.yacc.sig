@@ -25,6 +25,7 @@ val RBRACKET:  'a * 'a -> (svalue,'a) token
 val LBRACKET:  'a * 'a -> (svalue,'a) token
 val NAT: (int) *  'a * 'a -> (svalue,'a) token
 val COMMA:  'a * 'a -> (svalue,'a) token
+val COLON:  'a * 'a -> (svalue,'a) token
 val SEMICOLON:  'a * 'a -> (svalue,'a) token
 val TWOCOLON:  'a * 'a -> (svalue,'a) token
 val LE:  'a * 'a -> (svalue,'a) token

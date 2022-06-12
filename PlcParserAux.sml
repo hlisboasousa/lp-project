@@ -11,22 +11,20 @@ fun listString (conv, l) =
 (* Parse a match to string *)
 fun matchString (conv, (option,exp)::t) =
     case option of
-      SOME option => "(Some (" ^ conv(option) ^ "), " ^ conv(exp)  ^ ");" ^ matchString(conv, t)
+      SOME option => "(Some (" ^ conv(option) ^ "), " ^ conv(exp)  ^ "); " ^ matchString(conv, t)
     | NONE => "(None, " ^ conv(exp) ^ ")"
 
 (* Creat the body of a function expression. *)
 fun makeFunAux (n: int, xs: (plcType * string) list, e: expr): expr =
-    e (* TODO *)
+    case xs of
+       (_, s)::[]  => Let(s, Item(n, Var "$list"), e)
+     | (_, s)::t   => Let(s, Item(n, Var "$list"), makeFunAux(n+1, t, e)); 
 
 (* Create the list of arguments of a function. *)
 fun makeType (args: (plcType * string) list): plcType =
-    ListT [];
-    (* case args of
-      IntT i          => i
-      | BoolT b       => b
-      | FunT (a, b)   => FunT(makeType a, makeType b)
-      | ListT h::t    => ListT([makeType h, makeType t])
-      | SeqT s        => SeqT(makeType s); *)
+    case args of
+        []               => ListT[]
+      | (i, _)::t        => ListT([i, makeType(t)]);
 
 (* Create a function expression. *)
 fun makeFun (f: string, xs: (plcType * string) list, rt: plcType, e1: expr, e2: expr): expr =
