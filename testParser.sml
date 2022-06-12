@@ -18,7 +18,7 @@ Control.Print.stringDepth := 1000;
 
 open PlcFrontEnd;
 
-fromString "1+3*4-2";
+fromString "(6,false)[1]";
 (*
 fromString "15";
 fromString "true";

@@ -33,14 +33,15 @@ fun init() = ()
 
 digit=[0-9];
 ws = [\ \t];
+alpha=[A-Za-z][A-Za-z0-9]*;
 %%
 \n          => (pos := (!pos) + 1; Tokens.EOF(!pos, !pos));
 {ws}+       => (lex());
 {digit}+    => (Tokens.NAT (valOf (Int.fromString yytext), !pos, !pos));
-
 "+"         => (Tokens.PLUS(!pos,!pos));
 "*"         => (Tokens.TIMES(!pos,!pos));
 ";"         => (Tokens.SEMICOLON(!pos, !pos));
+","         => (Tokens.COMMA(!pos, !pos));
 "-"         => (Tokens.MINUS(!pos,!pos));
 "/"         => (Tokens.DIV(!pos,!pos));
 "("         => (Tokens.LPAREN(!pos,!pos));
@@ -66,6 +67,7 @@ ws = [\ \t];
 "else"      => (Tokens.ELSE(!pos,!pos));
 "then"      => (Tokens.THEN(!pos,!pos));
 "match"     => (Tokens.MATCH(!pos,!pos));
+"with"      => (Tokens.WITH(!pos,!pos));
 "var"       => (Tokens.VAR(!pos,!pos));
 "fun"       => (Tokens.FUN(!pos,!pos));
 "fun rec"   => (Tokens.FUNREC(!pos,!pos));
@@ -73,5 +75,10 @@ ws = [\ \t];
 "=>"        => (Tokens.ARROW(!pos,!pos));
 "print"     => (Tokens.PRINT(!pos, !pos));
 "end"       => (Tokens.END(!pos, !pos));
-"false"     => (Tokens.FALSE(!pos, !pos));
-"true"      => (Tokens.TRUE(!pos, !pos));
+"false"     => (Tokens.FALSE(valOf (Bool.fromString yytext), !pos, !pos));
+"true"      => (Tokens.TRUE(valOf (Bool.fromString yytext), !pos, !pos));
+"nil"       => (Tokens.NIL(!pos, !pos));
+"|"         => (Tokens.PIPE(!pos, !pos));
+"_"         => (Tokens.UNDERSCORE(!pos, !pos));
+"->"        => (Tokens.FUNT(!pos, !pos));
+{alpha}+    => (Tokens.NAME(yytext, !pos, !pos));
