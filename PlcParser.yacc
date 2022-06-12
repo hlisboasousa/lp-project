@@ -11,8 +11,13 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
   | exp2string (Item(i, x)) = "Item(" ^ Int.toString(i) ^ ", " ^ exp2string(x) ^ ")"
   | exp2string (If(e1, e2, e3)) = "If(" ^ exp2string(e2) ^ ", then " ^ exp2string(e2) ^ ", else " ^ exp2string(e3) ^ ")"
   | exp2string (List(l)) = "List[" ^ listString(list2expr, l) ^ "]"
-  | exp2string(Var x) = "Var \"" ^ x ^ "\""
+  | exp2string (Var x) = "Var \""^ x ^ "\""
   | exp2string (Match(x, (option,exp)::t)) = "Match(" ^ exp2string(x) ^ ")"
+  | exp2string (Call(a1, a2)) = "Call(" ^ exp2string(a1) ^ ", " ^ exp2string(a2)^ ")"
+
+fun decl2string (Let(x, expr1, prog)) = "Let(\"" ^ x ^ "\", " ^ exp2string(expr1) ^ " " ^ exp2string(prog) ")"
+
+       
 
 %%
 
@@ -39,7 +44,7 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
         | FALSE of bool | NIL | BOOL | INT | WITH | EOF | FUNT | F | UNDERSCORE | PIPE
 
 
-%nonterm  Prog | Decl | Expr of expr | AtomicExpr of expr | AppExpr | Const of expr | Comps of expr | MatchExpr of (expr option * expr) list
+%nonterm  Prog | Decl | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr | MatchExpr of (expr option * expr) list
         | CondExpr of expr option | Args | Params | TypedVar | Type | AtomicType | Types 
         
 %eop EOF
@@ -50,10 +55,11 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
 
 %%
 
-Prog    :   Expr        (print (exp2string(Expr)^"\n" ))
+Prog    :   Expr                 (print (exp2string(Expr)^"\n" ))
+        |   Decl SEMICOLON Prog  (print (decl2string(Decl, Prog)^"\n" ))
 
 Expr    :   AtomicExpr                          (AtomicExpr)
-        (* |   AppExpr                             (AppExpr) *)
+        |   AppExpr                             (AppExpr)
         |   IF Expr THEN Expr ELSE Expr         (If(Expr1, Expr2, Expr3))
         |   MATCH Expr WITH MatchExpr           (Match(Expr, MatchExpr))
         |   EXCLAMATION Expr                    (Prim1("!", Expr))
@@ -98,6 +104,12 @@ MatchExpr: END                               ([])
 CondExpr: Expr          (SOME Expr)
        | UNDERSCORE     (NONE)
 
+AppExpr :   AtomicExpr AtomicExpr  (Call(AtomicExpr1, AtomicExpr2))
+        |   AppExpr AtomicExpr     (Call(AppExpr, AtomicExpr))
+
+Decl    :   VAR NAME EQ Expr       (Let(NAME, Expr, Expr))
+
+
 (* Args:      LPAREN RPAREN        ()
        |   LPAREN Params RPAREN (Params)
 
@@ -120,29 +132,5 @@ Types:   Type COMMA Type        (ListT(Type1, Type2))
        | Type COMMA Types       (ListT(Type, Types)) *)
 
         (* |   Expr LBRACKET NAT RBRACKET          ()
-
-AtomicExpr    :   const         (const)
-              |   name          (Var name)
-
-AppExpr
-
-Const
-
-Comps
-
-MatchExpr
-
-CondExpr
-
-Args
-
-Params
-
-TypeVar
-
-Type
-
-AtomicType
-
-Types *)
+ *)
 
