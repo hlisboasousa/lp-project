@@ -34,6 +34,7 @@ datatype plcVal =
 fun list2string (conv, l) =
   case l of
       [] => ""
+    | h::[] => conv(h)
     | h::ts => conv(h) ^ ", " ^ list2string (conv, ts);
 
 (* Convert a plcType into a string *)
@@ -41,13 +42,13 @@ fun type2string t =
   case t of
       BoolT => "BoolT"
     | IntT => "IntT"
-    | ListT [] => "Nil"
-    | ListT ts => "(" ^ list2string (type2string, ts) ^ ")"
-    | SeqT t1 => "[" ^ type2string t1 ^ "]"
+    | ListT [] => "ListT[]"
+    | ListT ts => "ListT[" ^ list2string (type2string, ts) ^ "]"
+    | SeqT t1 => "SeqT (" ^ type2string t1 ^ ")"
     | FunT (t1,t2) =>
         case t1 of
-            FunT _ => "(" ^ type2string t1 ^ ") -> " ^ type2string t2
-          | _ => type2string t1 ^ " -> " ^ type2string t2;
+            FunT _ => "FunT(" ^ type2string t1 ^ "), " ^ type2string t2
+          | _ => type2string t1 ^ ", " ^ type2string t2;
 
 (* Convert a plcVal into a string *)
 fun val2string v =
