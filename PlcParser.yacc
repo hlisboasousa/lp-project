@@ -1,26 +1,23 @@
-(* Função auxiliar para imprimir Lista e Match *)
-fun list2expr (ConI x) = "ConI " ^ Int.toString(x)
-  | list2expr (ConB x) = "ConB " ^ Bool.toString(x)
-  | list2expr (Prim1(f, x)) = "Prim1(\"" ^ f ^ "\"" ^ ", " ^ list2expr(x) ^ ")"
-  | list2expr (Var x) = "Var \""^ x ^ "\""
-  | list2expr (List(l)) = listString(list2expr, l)
-
+(*
+  * Função para imprimir expressões
+  * Usa funções auxiliares do PlcParserAux (listString e matchString)
+*)
 fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
   | exp2string (ConB x) = "ConB " ^ Bool.toString(x)
   | exp2string (Prim1(f, x)) = "Prim1 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ")"
   | exp2string (Prim2(f, x, y)) = "Prim2 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ", " ^ exp2string(y) ^ ")"
   | exp2string (Item(i, x)) = "Item (" ^ Int.toString(i) ^ ", " ^ exp2string(x) ^ ")"
   | exp2string (If(e1, e2, e3)) = "If (" ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ", " ^ exp2string(e3) ^ ")"
-  | exp2string (List(l)) = "List [" ^ listString(list2expr, l) ^ "]"
+  | exp2string (List(l)) = "List [" ^ listString(exp2string, l) ^ "]"
   | exp2string (ESeq(t)) = "ESeq (" ^ type2string(t) ^ ")"
   | exp2string (Var x) = "Var \""^ x ^ "\""
-  | exp2string (Match(x, l:(expr option * expr) list)) = "Match (" ^ exp2string(x) ^ ", [" ^ matchString(list2expr, l) ^ "])"
+  | exp2string (Match(x, l:(expr option * expr) list)) = "Match (" ^ exp2string(x) ^ ", [" ^ matchString(exp2string, l) ^ "])"
   | exp2string (Call(a1, a2)) = "Call (" ^ exp2string(a1) ^ ", " ^ exp2string(a2)^ ")"
   | exp2string (Let(s, e1, e2)) = "Let (\"" ^ s ^ "\", " ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ")"
   | exp2string (Anon(p, s, e)) = "Anon (" ^ type2string(p) ^ ", \"" ^ s ^ "\", " ^ exp2string(e) ^ ")"
   | exp2string (Letrec(f, t, a, r, e1, e2)) = "Letrec (\"" ^ f ^ "\", " ^ type2string(t) ^ ", \"" ^ a ^ "\", " ^ type2string(r)
-       ^ ", \n\t" ^ exp2string(e1)
-       ^ ", \n\t" ^ exp2string(e2) ^ ")"
+       ^ ", " ^ exp2string(e1)
+       ^ ", " ^ exp2string(e2) ^ ")"
        
 %%
 
@@ -47,7 +44,7 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
         | FALSE of bool | NIL | BOOL | INT | WITH | EOF | FUNT | F | UNDERSCORE | PIPE
 
 
-%nonterm  Init | Prog of expr | Decl of expr | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr | MatchExpr of (expr option * expr) list
+%nonterm  Init | Prog of expr | Decl of expr | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr list | MatchExpr of (expr option * expr) list
         | CondExpr of expr option | Args of (plcType * string) list | Params of (plcType * string) list
         | TypedVar of (plcType * string) | Type of plcType | AtomicType of plcType | Types of plcType list 
         
@@ -93,7 +90,7 @@ AtomicExpr : Const                              (Const)
         |    NAME                               (Var(NAME))
         |    LBRACE Prog RBRACE                 (Prog)
         |    LPAREN Expr RPAREN                 (Expr)
-        |    LPAREN Comps RPAREN                (List([Comps]))
+        |    LPAREN Comps RPAREN                (List(Comps))
         |    ANON Args ARROW Expr END           (makeAnon(Args, Expr))
 
 Const:     NAT                                   (ConI(NAT))
@@ -102,8 +99,8 @@ Const:     NAT                                   (ConI(NAT))
         | LPAREN RPAREN                          (List([]))
         | LPAREN Type LBRACKET RBRACKET RPAREN   (ESeq(Type))
 
-Comps:      Expr COMMA Expr             (List([Expr1, Expr2]))
-       |    Expr COMMA Comps            (List([Expr, Comps]))
+Comps:      Expr COMMA Expr             ([Expr1, Expr2])
+       |    Expr COMMA Comps            (Expr::Comps)
 
 MatchExpr: END                               ([])
        |   PIPE CondExpr FUNT Expr MatchExpr ((CondExpr, Expr)::MatchExpr)
@@ -114,9 +111,9 @@ CondExpr: Expr          (SOME Expr)
 AppExpr :   AtomicExpr AtomicExpr  (Call(AtomicExpr1, AtomicExpr2))
         |   AppExpr AtomicExpr     (Call(AppExpr, AtomicExpr))
 
-Decl    :   VAR NAME EQ Expr SEMICOLON Expr                    (Let(NAME, Expr1, Expr2))
-        |   FUN NAME Args EQ Expr SEMICOLON Expr               (Let(NAME, makeAnon(Args, Expr1), Expr2))
-        |   FUNREC NAME Args COLON Type EQ Expr SEMICOLON Expr (makeFun(NAME, Args, Type, Expr1, Expr2))
+Decl    :   VAR NAME EQ Expr SEMICOLON Prog                    (Let(NAME, Expr, Prog))
+        |   FUN NAME Args EQ Expr SEMICOLON Prog               (Let(NAME, makeAnon(Args, Expr), Prog))
+        |   FUNREC NAME Args COLON Type EQ Expr SEMICOLON Prog (makeFun(NAME, Args, Type, Expr, Prog))
 
 
 Args:      LPAREN RPAREN        ([])

@@ -44,11 +44,12 @@ fun type2string t =
     | IntT => "IntT"
     | ListT [] => "ListT[]"
     | ListT ts => "ListT[" ^ list2string (type2string, ts) ^ "]"
-    | SeqT t1 => "SeqT (" ^ type2string t1 ^ ")"
-    | FunT (t1,t2) =>
-        case t1 of
-            FunT _ => "FunT(" ^ type2string t1 ^ "), " ^ type2string t2
-          | _ => type2string t1 ^ ", " ^ type2string t2;
+    | SeqT t1 =>
+        (case t1 of
+            BoolT => "SeqT " ^ type2string t1
+          | IntT => "SeqT " ^ type2string t1
+          | _ => "SeqT (" ^ type2string t1 ^ ")")
+    | FunT (t1,t2) => "FunT(" ^ type2string t1 ^ ", " ^ type2string t2 ^ ")";
 
 (* Convert a plcVal into a string *)
 fun val2string v =
