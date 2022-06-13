@@ -35,8 +35,6 @@ val EQ:  'a * 'a -> (svalue,'a) token
 val DIV:  'a * 'a -> (svalue,'a) token
 val TIMES:  'a * 'a -> (svalue,'a) token
 val PLUS:  'a * 'a -> (svalue,'a) token
-val NOT:  'a * 'a -> (svalue,'a) token
-val OR:  'a * 'a -> (svalue,'a) token
 val AND:  'a * 'a -> (svalue,'a) token
 val PRINT:  'a * 'a -> (svalue,'a) token
 val ISEMPTY:  'a * 'a -> (svalue,'a) token
