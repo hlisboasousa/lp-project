@@ -469,10 +469,10 @@ datatype svalue = VOID | ntVOID of unit ->  unit
  | Comps of unit ->  (expr list) | Const of unit ->  (expr)
  | AppExpr of unit ->  (expr) | AtomicExpr of unit ->  (expr)
  | Expr of unit ->  (expr) | Decl of unit ->  (expr)
- | Prog of unit ->  (expr)
+ | Prog of unit ->  (expr) | Init of unit ->  (expr)
 end
 type svalue = MlyValue.svalue
-type result = unit
+type result = expr
 end
 structure EC=
 struct
@@ -555,10 +555,10 @@ fn (i392,defaultPos,stack,
     (()):arg) =>
 case (i392,stack)
 of  ( 0, ( ( _, ( MlyValue.Prog Prog1, Prog1left, Prog1right)) :: 
-rest671)) => let val  result = MlyValue.ntVOID (fn _ => ( let val  (
-Prog as Prog1) = Prog1 ()
- in (print(exp2string(Prog)^"\n"))
-end; ()))
+rest671)) => let val  result = MlyValue.Init (fn _ => let val  (Prog
+ as Prog1) = Prog1 ()
+ in (Prog)
+end)
  in ( LrTable.NT 0, ( result, Prog1left, Prog1right), rest671)
 end
 |  ( 1, ( ( _, ( MlyValue.Expr Expr1, Expr1left, Expr1right)) :: 
@@ -1038,7 +1038,7 @@ end
 | _ => raise (mlyAction i392)
 end
 val void = MlyValue.VOID
-val extract = fn a => (fn MlyValue.ntVOID x => x
+val extract = fn a => (fn MlyValue.Init x => x
 | _ => let exception ParseInternal
 	in raise ParseInternal end) a ()
 end

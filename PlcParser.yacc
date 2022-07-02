@@ -44,7 +44,7 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
         | FALSE of bool | NIL | BOOL | INT | WITH | EOF | FUNT | F | UNDERSCORE | PIPE
 
 
-%nonterm  Init | Prog of expr | Decl of expr | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr list | MatchExpr of (expr option * expr) list
+%nonterm  Init of expr | Prog of expr | Decl of expr | Expr of expr | AtomicExpr of expr | AppExpr of expr | Const of expr | Comps of expr list | MatchExpr of (expr option * expr) list
         | CondExpr of expr option | Args of (plcType * string) list | Params of (plcType * string) list
         | TypedVar of (plcType * string) | Type of plcType | AtomicType of plcType | Types of plcType list 
         
@@ -55,7 +55,7 @@ fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
 %start Init
 
 %%
-Init   :    Prog                 (print(exp2string(Prog)^"\n"))
+Init   :    Prog                 (Prog)
 
 Prog    :   Expr                 (Expr)
         |   Decl                 (Decl)
