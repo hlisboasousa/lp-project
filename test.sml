@@ -20,6 +20,6 @@ use "PlcChecker.sml";
 use "PlcInterp.sml";
 use "Plc.sml";
 
-val abs = fromString "";
+val abs = fromString "var x = (1,2,true); x[4]";
 val venv = [];
 val v = run(abs);

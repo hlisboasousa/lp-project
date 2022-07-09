@@ -10,7 +10,7 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 	case e of
 		  ConI i => IntV i
 		| ConB b => BoolV b
-		(* | ESeq x =>	SeqV x  *)
+		| ESeq _ =>	SeqV []
 		| Var x => lookup env x
 		| Prim1(opr, e1) =>
 				let
@@ -19,10 +19,10 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 					case (opr, v1) of
 						  ("-", IntV i) => IntV (~i)
 						| ("!", BoolV b) => BoolV (not b)
-						| ("ise", ListV []) => BoolV true 
-						| ("ise", ListV _) => BoolV false 
-						| ("hd", ListV l) => hd l
-						(* | ("tl", ListV l) => ListV tl l *)
+						| ("ise", SeqV []) => BoolV true 
+						| ("ise", SeqV _) => BoolV false 
+						| ("hd", SeqV l) => hd l
+						| ("tl", SeqV l) => SeqV (tl l)
 						| ("print", _) =>
 										let
 											val s = val2string v1
@@ -54,7 +54,7 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 						| ("<=" , IntV i1, IntV i2) => 
 							if i1 <= i2 then BoolV true
 							else BoolV false
-						(* | ("::" , _ , _) => ListV [v1::v2] *)
+						| ("::" , _ , _) => SeqV(v1::[v2])
 						| (";" , _ , _) => v2
 						| _ => raise Impossible
 						end
@@ -74,14 +74,31 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 				if condVal = BoolV true then e1Val
 				else e2Val
 			end
-		(* | Match(e, []) => raise NoMatchResults *)
-        (* | Match(e, (SOME e1, e2) :: xs) =>
-            let
-                val eVal = eval e env
-                val e1Val = eval e1 env
-            in
-                if eval = e1Val then eval e2 env
-                else eval Match(e,xs) env
-            end
-        | Match(e, (None, e2) :: xs) => eval e2 env  *)
+		| Match(e, []) => raise NoMatchResults
+		| Match(e, (SOME e1, e2) :: xs) =>
+				let
+						val eVal = eval e env
+						val e1Val = eval e1 env
+						val matchE = Match(e,xs)
+				in
+						if eVal = e1Val then eval e2 env
+						else eval matchE env
+				end
+		| Match(e, (None, e2) :: xs) => eval e2 env
+		| List([]) => ListV []
+		| List(h::t) =>
+				let
+						val headType = eval h env
+						val tail = List(t)
+						val tailType = eval tail env
+				in
+						ListV ([headType,tailType])
+				end
+		| Item(i, e) => 
+				let
+						val eVal = eval e env
+				in
+						case eVal of
+								ListV l => getElement i l 1
+				end
 		| _ => raise Impossible
