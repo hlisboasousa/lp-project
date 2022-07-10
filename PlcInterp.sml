@@ -12,6 +12,13 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 		| ConB b => BoolV b
 		| ESeq _ =>	SeqV []
 		| Var x => lookup env x
+		| Let(x, e1, e2) =>
+				let
+					val v = eval e1 env
+					val env2 = (x,v) :: env
+				in
+					eval e2 env2
+				end
 		| Prim1(opr, e1) =>
 				let
 					val v1 = eval e1 env
@@ -54,17 +61,16 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 						| ("<=" , IntV i1, IntV i2) => 
 							if i1 <= i2 then BoolV true
 							else BoolV false
-						| ("::" , _ , _) => SeqV(v1::[v2])
+						| ("::" , _ , _) => 
+								let
+										val rec result = fn (h::[]) => [eval h env]
+																			|	(h::t) => (eval h env)::result(t)
+								in
+									SeqV([v1,v2])
+								end
 						| (";" , _ , _) => v2
 						| _ => raise Impossible
 						end
-		| Let(x, e1, e2) =>
-				let
-					val v = eval e1 env
-					val env2 = (x,v) :: env
-				in
-					eval e2 env2
-				end
 		| If (cond, e1, e2) =>
 			let
 				val condVal = eval cond env
@@ -85,14 +91,25 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 						else eval matchE env
 				end
 		| Match(e, (None, e2) :: xs) => eval e2 env
-		| List([]) => ListV []
-		| List(h::t) =>
+		| Call(e1, e2) =>
 				let
-						val headType = eval h env
-						val tail = List(t)
-						val tailType = eval tail env
+						val evalE1 = eval e1 env
+						val evalE2 = eval e2 env
 				in
-						ListV ([headType,tailType])
+					case evalE1 of
+							Clos(_, varName, varExpr, _) =>
+									let
+											val env' = (varName, evalE2)::env
+									in
+											eval varExpr env'
+									end
+				end
+		| List(l) =>
+				let
+						val rec result = fn (h::[]) => [eval h env]
+															|	(h::t) => (eval h env)::result(t)
+				in
+						ListV(result(l))
 				end
 		| Item(i, e) => 
 				let
@@ -101,4 +118,5 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 						case eVal of
 								ListV l => getElement i l 1
 				end
+		| Anon(_, varName, expr) => Clos("", varName, expr, env)
 		| _ => raise Impossible

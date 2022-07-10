@@ -26,12 +26,24 @@ fun getElement index [] it = raise ListOutOfRange
 			else if it > index then raise ListOutOfRange
 			else getElement index t (it+1)
 
+fun convert2string ([], conv) = []
+	|	convert2string ((h::[]), conv) = [conv(h)]
+	| convert2string ((h::t), conv) = (conv(h))::(convert2string(t, conv))
+
 fun teval (e:expr) (env: plcType env) : plcType =
 	case e of
       ConI _ => IntT
     | ConB _ => BoolT
     | ESeq x => x
 		| Var x => lookup env x
+		| Let(x, e1, e2) =>
+				let
+					val t = teval e1 env
+					val env' = (x,t)::env
+				in
+					teval e2 env'
+				end
+		(* | LetRec(funName, argType, argName, resType, baseExpr, recursiveExpr) => *)
 		| Prim1(opr, e1) =>
 				let
 					val t1 = teval e1 env
@@ -70,13 +82,6 @@ fun teval (e:expr) (env: plcType env) : plcType =
 					| (";" , _ , _)    => t2
 					| _   =>  raise UnknownType
 				end
-		| Let(x, e1, e2) =>
-				let
-					val t = teval e1 env
-					val env' = (x,t)::env
-				in
-					teval e2 env'
-				end
 		| If(cond, e1, e2) =>
             let
                 val condType = teval cond env
@@ -103,14 +108,21 @@ fun teval (e:expr) (env: plcType env) : plcType =
 						else tE2val
 				end
 		| Match(e, (None, e2) :: xs) => teval e2 env
-		| List([]) => ListT []
-		| List(h::t) =>
+		| Call(e1, e2) =>
 				let
-						val headType = teval h env
-						val tail = List(t)
-						val tailType = teval tail env
+						val typeE1 = teval e1 env 
+						val typeE2 = teval e2 env
 				in
-						ListT ([headType, tailType])
+						case typeE1 of
+									FunT(t1, t2) => if t1 = typeE2 then t2 else raise CallTypeMisM
+								| _ => raise NotFunc
+				end
+		| List(l) =>
+				let
+						val rec result = fn (h::[]) => [teval h env]
+															|	(h::t) => (teval h env)::result(t)
+				in
+						ListT(result(l))
 				end
 		| Item(i, e) =>
 				let
@@ -119,5 +131,14 @@ fun teval (e:expr) (env: plcType env) : plcType =
 						case eType of
 								ListT(l) => getElement i l 1
 							|	_ => raise OpNonList
-				end 
+				end
+		| Anon(varType, varName, expr) =>
+				let
+						val env' = (varName, varType)::env
+						val typeExpr = teval expr env'
+				in
+						FunT(varType, typeExpr)
+						(* if varType = typeExpr then FunT (varType, typeExpr)
+						else raise CallTypeMisM *)
+				end
 		| _   =>  raise UnknownType
