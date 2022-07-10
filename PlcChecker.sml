@@ -12,7 +12,6 @@ exception CallTypeMisM
 exception NotFunc
 exception ListOutOfRange
 exception OpNonList
-exception DiffTypeSeq
 
 fun getElement index [] it = raise ListOutOfRange
 	| getElement index (h::t) it =
@@ -67,7 +66,7 @@ fun teval (e:expr) (env: plcType env) : plcType =
                             raise NotEqTypes
 					| ("<" , IntT, IntT) => BoolT
 					| ("<=" , IntT, IntT) => BoolT
-					| ("::" , _, _) => if t1 = t2 then t2 else raise DiffTypeSeq
+					| ("::" , _, _) => t2
 					| (";" , _ , _)    => t2
 					| _   =>  raise UnknownType
 				end

@@ -5,24 +5,7 @@ exception HDEmptySeq
 exception TLEmptySeq
 exception ValueNotFoundInMatch
 exception NotAFunc
-
-fun exp2string (ConI x) = "ConI " ^ Int.toString(x)
-  | exp2string (ConB x) = "ConB " ^ Bool.toString(x)
-  | exp2string (Prim1(f, x)) = "Prim1 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ")"
-  | exp2string (Prim2(f, x, y)) = "Prim2 (\"" ^ f ^ "\"" ^ ", " ^ exp2string(x) ^ ", " ^ exp2string(y) ^ ")"
-  | exp2string (Item(i, x)) = "Item (" ^ Int.toString(i) ^ ", " ^ exp2string(x) ^ ")"
-  | exp2string (If(e1, e2, e3)) = "If (" ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ", " ^ exp2string(e3) ^ ")"
-  | exp2string (List(l)) = "List [" ^ listString(exp2string, l) ^ "]"
-  | exp2string (ESeq(t)) = "ESeq (" ^ type2string(t) ^ ")"
-  | exp2string (Var x) = "Var \""^ x ^ "\""
-  | exp2string (Match(x, l:(expr option * expr) list)) = "Match (" ^ exp2string(x) ^ ", [" ^ matchString(exp2string, l) ^ "])"
-  | exp2string (Call(a1, a2)) = "Call (" ^ exp2string(a1) ^ ", " ^ exp2string(a2)^ ")"
-  | exp2string (Let(s, e1, e2)) = "Let (\"" ^ s ^ "\", " ^ exp2string(e1) ^ ", " ^ exp2string(e2) ^ ")"
-  | exp2string (Anon(p, s, e)) = "Anon (" ^ type2string(p) ^ ", \"" ^ s ^ "\", " ^ exp2string(e) ^ ")"
-  | exp2string (Letrec(f, t, a, r, e1, e2)) = "Letrec (\"" ^ f ^ "\", " ^ type2string(t) ^ ", \"" ^ a ^ "\", " ^ type2string(r)
-       ^ ", " ^ exp2string(e1)
-       ^ ", " ^ exp2string(e2) ^ ")"
-
+			 
 fun eval (e:expr) (env:plcVal env) : plcVal =
 	case e of
 		  ConI i => IntV i
@@ -45,9 +28,9 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 						| ("!", BoolV b) => BoolV (not b)
 						| ("ise", SeqV []) => BoolV true 
 						| ("ise", SeqV _) => BoolV false 
-						| ("hd", SeqV []) => raise EmptySeq
+						| ("hd", SeqV []) => raise HDEmptySeq
 						| ("hd", SeqV l) => hd l
-						| ("tl", SeqV []) => raise EmptySeq
+						| ("tl", SeqV []) => raise TLEmptySeq
 						| ("tl", SeqV l) => SeqV (tl l)
 						| ("print", _) =>
 										let
@@ -99,7 +82,7 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 				if condVal = BoolV true then e1Val
 				else e2Val
 			end
-		| Match(e, []) => raise NoMatchResults
+		| Match(e, []) => raise ValueNotFoundInMatch
 		| Match(e, (SOME e1, e2) :: xs) =>
 				let
 						val eVal = eval e env
@@ -113,17 +96,19 @@ fun eval (e:expr) (env:plcVal env) : plcVal =
 		| Call(e1, e2) =>
 				let
 						val evalE1 = eval e1 env
+						val rec insertVar = fn 	(List((h::[]))) => [eval h env]
+																	| (List(h::t)) => (eval h env)::insertVar(List t)
+																	| (exp) => [eval exp env]
 				in
 					case evalE1 of
 							Clos(funName, argName, bodyExpr, funEnv) =>
 									let
-											val evalE2 = eval e2 env
+											val evalE2 = eval e2 (("$list", ListV (insertVar(e2)))::env)
 											val env' = (argName, evalE2)::(funName, evalE1)::funEnv
 									in
-											print(argName^"("^val2string(evalE2)^") = "^ exp2string(bodyExpr) ^"\n");
 											eval bodyExpr env'
 									end
-							| _ => raise NotFunc
+							| _ => raise NotAFunc
 				end
 		| List(l) =>
 				let
