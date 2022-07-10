@@ -20,7 +20,7 @@ use "PlcChecker.sml";
 use "PlcInterp.sml";
 use "Plc.sml";
 
-(* val abs = fromString "1::2::3::4"; *)
-val abs = fromString "fun f(Int x, Bool y) = if y then x+1 else x+2; f(3, false)";
+val abs = fromString "fun rec f(Int n):Int = if n <= 0 then 0 else n + f(n-1); f(5)";
+(* val abs = fromString "fun f(Int x, Bool y) = if y then x+1 else x+2; f(3, false)"; *)
 val venv = [];
 val v = run(abs);

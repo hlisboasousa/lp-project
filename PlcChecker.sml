@@ -12,23 +12,13 @@ exception CallTypeMisM
 exception NotFunc
 exception ListOutOfRange
 exception OpNonList
-
-(* fun checkRes (e2:expr) (xs : (expr option * expr) list) (env) : bool =
-	case xs of
-			[] => true
-		|	(cond, res)::t =>
-			if e2 <> (teval res env) then false
-			else checkRes e2 t env *)
+exception DiffTypeSeq
 
 fun getElement index [] it = raise ListOutOfRange
 	| getElement index (h::t) it =
 			if it = index then h
 			else if it > index then raise ListOutOfRange
 			else getElement index t (it+1)
-
-fun convert2string ([], conv) = []
-	|	convert2string ((h::[]), conv) = [conv(h)]
-	| convert2string ((h::t), conv) = (conv(h))::(convert2string(t, conv))
 
 fun teval (e:expr) (env: plcType env) : plcType =
 	case e of
@@ -43,7 +33,6 @@ fun teval (e:expr) (env: plcType env) : plcType =
 				in
 					teval e2 env'
 				end
-		(* | LetRec(funName, argType, argName, resType, baseExpr, recursiveExpr) => *)
 		| Prim1(opr, e1) =>
 				let
 					val t1 = teval e1 env
@@ -78,7 +67,7 @@ fun teval (e:expr) (env: plcType env) : plcType =
                             raise NotEqTypes
 					| ("<" , IntT, IntT) => BoolT
 					| ("<=" , IntT, IntT) => BoolT
-					| ("::" , _, _) => t2
+					| ("::" , _, _) => if t1 = t2 then t2 else raise DiffTypeSeq
 					| (";" , _ , _)    => t2
 					| _   =>  raise UnknownType
 				end
@@ -102,9 +91,15 @@ fun teval (e:expr) (env: plcType env) : plcType =
 						val tEval = teval e env
 						val tE1val = teval e1 env
 						val tE2val = teval e2 env
+						val rec checkResType = fn 	(valE2, []) => false
+																			|	(valE2, (e1, e2)::t) =>
+																					let val te2 = teval e2 env in
+																						if valE2 = te2 then checkResType(valE2, t) else true
+																					end
 						val matchE = Match(e, xs)
 				in
 						if tEval <> tE1val then raise MatchCondTypesDiff
+						else if checkResType(tE2val, xs) then raise MatchResTypeDiff
 						else tE2val
 				end
 		| Match(e, (None, e2) :: xs) => teval e2 env
@@ -119,10 +114,11 @@ fun teval (e:expr) (env: plcType env) : plcType =
 				end
 		| List(l) =>
 				let
-						val rec result = fn (h::[]) => [teval h env]
-															|	(h::t) => (teval h env)::result(t)
+						val rec buildList = fn 	([]) => []
+																	|	(h::[]) => [teval h env]
+																	|	(h::t) => (teval h env)::buildList(t)
 				in
-						ListT(result(l))
+						ListT(buildList(l))
 				end
 		| Item(i, e) =>
 				let
@@ -137,8 +133,13 @@ fun teval (e:expr) (env: plcType env) : plcType =
 						val env' = (varName, varType)::env
 						val typeExpr = teval expr env'
 				in
-						FunT(varType, typeExpr)
-						(* if varType = typeExpr then FunT (varType, typeExpr)
-						else raise CallTypeMisM *)
+						FunT (varType, typeExpr)
 				end
-		| _   =>  raise UnknownType
+		| Letrec(funName, argType, argName, resType, bodyExpr, callExpr) =>
+				let
+						val env' = (argName, argType)::(funName, FunT(argType, resType))::env
+						val bodyType = teval bodyExpr env'
+				in
+						if bodyType = resType then teval callExpr env'
+						else raise WrongRetType
+				end
